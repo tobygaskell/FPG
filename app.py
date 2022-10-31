@@ -2,61 +2,74 @@ import streamlit as st
 import snowflake.connector
 import pandas as pd
 import numpy as np
+import utils as utils
 
-# Initialize connection.
-# Uses st.experimental_singleton to only run once.
-@st.experimental_singleton
-def init_connection():
-    return snowflake.connector.connect(
-        **st.secrets["snowflake"], client_session_keep_alive=True
-    )
+st.sidebar.image('5.png', width = 100)
+st.title('Football Prediction Game')
 
-conn = init_connection()
 
-# Perform query.
-# Uses st.experimental_memo to only rerun when the query changes or after 10 min.
-@st.experimental_memo(ttl=600)
-def run_static_query(query):
-    '''
-    '''
-    with conn.cursor() as cur:
-        cur.execute(query)
-        return pd.DataFrame.from_records(iter(cur), columns = [x[0] for x in cur.description])
+round = utils.get_api("https://api-football-v1.p.rapidapi.com/v3/fixtures/rounds", {"league":"39","season":"2022","current":"true"})[0][-2:].strip()
 
-def run_query(query):
-    '''
-    '''
-    with conn.cursor() as cur:
-        cur.execute(query)
-        return pd.DataFrame.from_records(iter(cur), columns = [x[0] for x in cur.description])
+teams = utils.run_static_query('SELECT team_name, logo, team_id FROM teams order by team_name asc;')
 
-st.title('FPG')
+st.sidebar.markdown('## Pick a Team')   
+option = st.sidebar.radio('Pick a team', teams['TEAM_NAME'], label_visibility = 'collapsed')
 
-def check_if_submitted(player_id, round_num): 
-    '''
-    '''
-    exists = False
+option_id = teams[teams['TEAM_NAME'] == option].reset_index(drop = True)['TEAM_ID'][0]
+
+left, right = st.columns(2)
+
+with left: 
+
     query = '''
-            SELECT COUNT(DISTINCT TEAM_CHOICE) AS submitted 
-            FROM PLAYER_CHOICES 
-            WHERE UPPER(PLAYER_ID) = '{}' 
-            AND ROUND = {};
-            '''.format(player_id.upper(), round_num)
+            SELECT HOME_TEAM, AWAY_TEAM, dayname(kickoff)|| ' ' || TO_VARCHAR(KICKOFF, 'HH12 AM') as game_day
+            FROM FIXTURES_2022 
+            WHERE ROUND = {}
+            '''.format(round)
 
-    if run_query(query)['SUBMITTED'][0] > 0: 
-        exists = True 
+    fixtures = utils.run_static_query(query)
 
-    return exists
+    body = '## Fixtures this round:'
+    for index, row in fixtures.iterrows(): 
+        body = body + '\n- {} vs {}'.format(row['HOME_TEAM'], row['AWAY_TEAM'])
 
-teams = run_static_query('SELECT team_name FROM prem_teams order by team_name asc;')
+    st.markdown(body)
 
-option = st.selectbox('Pick a Team', teams['TEAM_NAME'])
+with right: 
+    st.image(teams[teams['TEAM_ID'] == option_id].reset_index(drop = True)['LOGO'][0])
 
-st.subheader(option)
+    if option in fixtures['HOME_TEAM'].unique(): 
+        st.markdown('## {} are at home to {} ({})'.format(option, 
+                                                         fixtures[fixtures['HOME_TEAM']== option].reset_index(drop = True)['AWAY_TEAM'][0], 
+                                                         fixtures[fixtures['HOME_TEAM']== option].reset_index(drop = True)['GAME_DAY'][0]))
 
-if st.button('Submit Choice'): 
+    elif option in fixtures['AWAY_TEAM'].unique(): 
+        st.markdown('## {} are away to {} ({})'.format(option, 
+                                                       fixtures[fixtures['AWAY_TEAM']== option].reset_index(drop = True)['HOME_TEAM'][0], 
+                                                       fixtures[fixtures['AWAY_TEAM']== option].reset_index(drop = True)['GAME_DAY'][0]))
 
-    exists = check_if_submitted('PL1', 1)
+
+
+    
+    # st.markdown('#### From This Season:')
+    # form = utils.get_api("https://api-football-v1.p.rapidapi.com/v3/teams/statistics", {"league":"39",
+    #                                                                                     "season":"2022", 
+    #                                                                                     "team":option_id})['form']
+    # st.write(form)
+
+    st.markdown('#### last 5 Results:')
+    st.write('WWWWW')
+
+
+
+
+
+
+
+
+if st.sidebar.button('Submit Choice'): 
+
+    exists = utils.check_if_submitted('PL1', 1)
 
     if not exists:
         query = '''
@@ -72,20 +85,11 @@ if st.button('Submit Choice'):
                 AND ROUND = 1
                 '''.format(option)
 
-    run_query(query)
+    utils.run_query(query)
 
     st.caption('Choice')
     st.write('Round 1: {}'.format(option))
 
-# query = '''
-#         select home_lat as "lon", home_lon as "lat"
-#         FROM prem_teams 
-#         '''
-
-# left_column, middle_column, right_column,  = st.columns(3)
-
-# with right_column:
-#     st.map(run_query(query))
 
 
 
