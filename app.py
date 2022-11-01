@@ -59,13 +59,49 @@ with right:
     #                                                                                     "team":option_id})['form']
     # st.write(form)
 
+
+
     st.markdown('#### last 5 Results:')
-    st.write('WWWWW')
+    query = '''
+            select round,home_team || ' vs ' || away_team as game, 
+                   score, 
+                   case when (home_team = '{option}' and home_goals > away_goals)
+                            or (away_team = '{option}' and away_goals > home_goals) 
+                        then 'Win' 
+                        when home_goals = away_goals 
+                        then 'Draw' 
+                        when (home_team = '{option}' and home_goals < away_goals)
+                            or (away_team = '{option}' and away_goals < home_goals) 
+                        then 'Loss' end as result 
+            from results as a
+            inner join fixtures as b 
+            on a.game_id = b.id
+            where home_team || away_team like '%{option}%'
+            and game_status = 'FT'
+            order by kickoff desc 
+            limit 5 
+            '''.format(option = option)
+
+    # st.write('WWWWW')
+
+    def colouring(val): 
+
+        if val['RESULT'] == 'Win': 
+            colour = 'background-color: #87c46a' 
+        elif val['RESULT'] == 'Draw': 
+            colour = 'background-color: #e6c050' 
+        elif val['RESULT'] == 'Loss': 
+            colour =  'background-color: #d6796d'
+
+        
+        return [colour] * 4
+
+    st.dataframe(utils.run_static_query(query).style.apply(colouring, axis = 1))
+
+    # .applymap(lambda x: "background-color: red" if x>0 else "background-color: white")
 
 
-
-
-
+# df.style.applymap(color_survived, subset=['Survived'])
 
 
 
