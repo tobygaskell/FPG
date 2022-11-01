@@ -8,6 +8,11 @@ st.sidebar.image('5.png', width = 100)
 st.title('Football Prediction Game')
 
 
+
+player_id = utils.check_if_player(st.experimental_user['email'])
+
+st.write(player_id)
+
 round = utils.get_api("https://api-football-v1.p.rapidapi.com/v3/fixtures/rounds", {"league":"39","season":"2022","current":"true"})[0][-2:].strip()
 
 teams = utils.run_static_query('SELECT team_name, logo, team_id FROM teams order by team_name asc;')
@@ -23,7 +28,7 @@ with left:
 
     query = '''
             SELECT HOME_TEAM, AWAY_TEAM, dayname(kickoff)|| ' ' || TO_VARCHAR(KICKOFF, 'HH12 AM') as game_day
-            FROM FIXTURES_2022 
+            FROM FIXTURES
             WHERE ROUND = {}
             '''.format(round)
 
@@ -73,22 +78,19 @@ if st.sidebar.button('Submit Choice'):
 
     if not exists:
         query = '''
-                INSERT INTO PLAYER_CHOICES
+                INSERT INTO choices
                 VALUES
                 ('PL1', '{}', 1)
                 '''.format(option)
     else: 
         query = '''
-                UPDATE PLAYER_CHOICES
+                UPDATE choices
                 SET TEAM_CHOICE = '{}'
                 WHERE UPPER(PLAYER_ID) = 'PL1'
                 AND ROUND = 1
                 '''.format(option)
 
     utils.run_query(query)
-
-    st.caption('Choice')
-    st.write('Round 1: {}'.format(option))
 
 
 
