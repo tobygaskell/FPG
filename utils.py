@@ -55,7 +55,7 @@ def check_if_submitted(player_id, round_num):
              FROM choices   
              WHERE UPPER(PLAYER_ID) = '{}' 
              AND ROUND = {};
-             '''.format(player_id.upper(), round_num)
+             '''.format(player_id, round_num)
 
      if run_query(query)['SUBMITTED'][0] > 0: 
          exists = True 

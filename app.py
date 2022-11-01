@@ -5,13 +5,10 @@ import numpy as np
 import utils as utils
 
 st.sidebar.image('5.png', width = 100)
-st.title('Football Prediction Game')
-
-
 
 player_id = utils.check_if_player(st.experimental_user['email'])
-
-st.write(player_id)
+st.title('Football Prediction Game')
+st.write('Player ID - {}'.format(player_id))
 
 round = utils.get_api("https://api-football-v1.p.rapidapi.com/v3/fixtures/rounds", {"league":"39","season":"2022","current":"true"})[0][-2:].strip()
 
@@ -74,21 +71,21 @@ with right:
 
 if st.sidebar.button('Submit Choice'): 
 
-    exists = utils.check_if_submitted('PL1', 1)
+    exists = utils.check_if_submitted(player_id, round)
 
     if not exists:
         query = '''
                 INSERT INTO choices
                 VALUES
-                ('PL1', '{}', 1)
-                '''.format(option)
+                ('{}', '{}', {})
+                '''.format(player_id, option, round)
     else: 
         query = '''
                 UPDATE choices
                 SET TEAM_CHOICE = '{}'
-                WHERE UPPER(PLAYER_ID) = 'PL1'
-                AND ROUND = 1
-                '''.format(option)
+                WHERE UPPER(PLAYER_ID) = '{}'
+                AND ROUND = {}
+                '''.format(option, player_id, round)
 
     utils.run_query(query)
 
