@@ -90,8 +90,8 @@ def check_if_player(email):
         query = '''
                 INSERT INTO PLAYERS
                 VALUES
-                (SEQ_PLAYER_ID.NEXTVAL, '{}')
-                '''.format(hash(email))
+                (SEQ_PLAYER_ID.NEXTVAL, '{}', '{}')
+                '''.format(hash(email), email)
 
         run_query(query)
 
