@@ -87,9 +87,9 @@ Points are accumulative 📈
 
 ##### Results
 
-- Manchester United (2-0) Manchester City (Derby)
+- Manchester United (2-0) Manchester City ⚔️
 - Chelsea (1-1) Nottingham Forest
-- Arsenal (2-2) Tottenham (Derby)
+- Arsenal (2-2) Tottenham ⚔️
 
 
 |      Player     | Choice | Basic 👍 | Head 2 Head 🤼 | Derby ⚔️ | Draw Round 🤝 | Sub Total | Double Points Round ‼️ | Total |

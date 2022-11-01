@@ -19,7 +19,10 @@ round = utils.get_api("https://api-football-v1.p.rapidapi.com/v3/fixtures/rounds
 teams = utils.run_static_query('SELECT team_name, logo, team_id FROM teams order by team_name asc;')
 
 query = '''
-        SELECT HOME_TEAM, AWAY_TEAM, dayname(kickoff)|| ' ' || TO_VARCHAR(KICKOFF, 'HH12 AM') as game_day
+        SELECT HOME_TEAM,
+               AWAY_TEAM, 
+               dayname(kickoff)|| ' ' || TO_VARCHAR(KICKOFF, 'HH12 AM') as game_day, 
+               case when derby then '(Derby)' else '' end as derby
         FROM FIXTURES
         WHERE ROUND = {}
         AND SEASON = 2022
@@ -29,8 +32,11 @@ fixtures = utils.run_static_query(query)
 
 body = '## Fixtures this round:'
 for index, row in fixtures.iterrows(): 
-    body = body + '\n- {} vs {}'.format(row['HOME_TEAM'], row['AWAY_TEAM'])
-
+    if row['DERBY'] == '(Derby)': 
+        body = body + '\n- {} vs {} {}'.format(row['HOME_TEAM'], row['AWAY_TEAM'], '⚔️')
+    else: 
+        body = body + '\n- {} vs {}'.format(row['HOME_TEAM'], row['AWAY_TEAM'])
+        
 st.markdown(body)
 
 st.markdown('## Pick a Team')   
