@@ -68,8 +68,8 @@ def get_player_id(email):
     query = '''
             SELECT PLAYER_ID 
             FROM PLAYERS 
-            WHERE EMAIL_HASH = '{}'
-            '''.format(hash(email))
+            WHERE EMAIL = '{}'
+            '''.format(email)
 
     return run_static_query(query)['PLAYER_ID'][0]
 
@@ -82,16 +82,16 @@ def check_if_player(email):
     query = '''
             SELECT COUNT(DISTINCT PLAYER_ID) AS PLAYER_EXISTS
             FROM PLAYERS
-            WHERE EMAIL_HASH = '{}'
-            '''.format(hash(email)) 
+            WHERE EMAIL = '{}'
+            '''.format(email)
 
     if run_query(query)['PLAYER_EXISTS'][0] == 0: 
 
         query = '''
                 INSERT INTO PLAYERS
                 VALUES
-                (SEQ_PLAYER_ID.NEXTVAL, '{}', '{}')
-                '''.format(hash(email), email)
+                (SEQ_PLAYER_ID.NEXTVAL, '{}')
+                '''.format(email)
 
         run_query(query)
 

@@ -3,18 +3,33 @@ import snowflake.connector
 import pandas as pd
 import numpy as np
 import utils as utils
+from streamlit_extras.switch_page_button import switch_page
 
-st.sidebar.image('5.png', width = 100)
+st.image('5.png', width = 100)
+
+round = utils.get_api("https://api-football-v1.p.rapidapi.com/v3/fixtures/rounds", {"league":"39","season":"2022","current":"true"})[0][-2:].strip()
 
 player_id = utils.check_if_player(st.experimental_user['email'])
 
-st.title('Football Prediction Game')
+st.title('Game Week - {}'.format(round))
 
-st.write('Player ID - {}'.format(player_id))
+query = '''
+        SELECT double_point_round, draw_round 
+        FROM rounds 
+        where round = {}
+        '''.format(round)
+
+round_info = utils.run_static_query(query)
+
+double_round = round_info['DOUBLE_POINT_ROUND'][0]
+
+draw_round = round_info['DRAW_ROUND'][0]
+
+st.subheader('Double Points Round {}'.format('✅' if double_round else '❌' ))
+
+st.subheader('Draw Round {}'.format('✅' if draw_round else '❌' ))
 
 st.markdown('---')
-
-round = utils.get_api("https://api-football-v1.p.rapidapi.com/v3/fixtures/rounds", {"league":"39","season":"2022","current":"true"})[0][-2:].strip()
 
 teams = utils.run_static_query('SELECT team_name, logo, team_id FROM teams order by team_name asc;')
 
@@ -42,6 +57,7 @@ st.markdown(body)
 st.markdown('## Pick a Team')   
 
 option = st.selectbox('Pick a team', teams['TEAM_NAME'], label_visibility = 'collapsed')
+
 option_id = teams[teams['TEAM_NAME'] == option].reset_index(drop = True)['TEAM_ID'][0]
 
 st.markdown('---')
@@ -146,30 +162,35 @@ else:
 
 st.markdown('---')
 
+left, right = st.columns(2)
 
+with left:
 
-if st.button('Submit Choice'): 
+    if st.button('Submit Choice'): 
 
-    exists = utils.check_if_submitted(player_id, round)
+        exists = utils.check_if_submitted(player_id, round)
 
-    if not exists:
-        query = '''
-                INSERT INTO choices
-                VALUES
-                ('{}', '{}', {})
-                '''.format(player_id, option, round)
-    else: 
-        query = '''
-                UPDATE choices
-                SET TEAM_CHOICE = '{}'
-                WHERE UPPER(PLAYER_ID) = '{}'
-                AND ROUND = {}
-                '''.format(option, player_id, round)
+        if not exists:
+            query = '''
+                    INSERT INTO choices
+                    VALUES
+                    ('{}', '{}', {})
+                    '''.format(player_id, option, round)
+        else: 
+            query = '''
+                    UPDATE choices
+                    SET TEAM_CHOICE = '{}'
+                    WHERE UPPER(PLAYER_ID) = '{}'
+                    AND ROUND = {}
+                    '''.format(option, player_id, round)
 
-    utils.run_query(query)
-    st.write('Choice Submitted')
+        utils.run_query(query)
+        st.write('Choice Submitted')
 
+with right: 
+    if st.button('Home'):
 
+        switch_page("home")
 
 
 
