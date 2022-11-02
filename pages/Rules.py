@@ -7,3 +7,4 @@ with open('Rules.md') as file:
 st.image('5.png', width = 100)
 
 st.markdown(text)
+
