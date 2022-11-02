@@ -8,8 +8,6 @@ st.image('5.png', width = 100)
 
 round = utils.get_api("https://api-football-v1.p.rapidapi.com/v3/fixtures/rounds", {"league":"39","season":"2022","current":"true"})[0][-2:].strip()
 
-st.write(st.experimental_user['email'])
-
 def colouring(val): 
 
     if val['PLAYER'] == st.experimental_user['email'][:st.experimental_user['email'].find('@')]: 
