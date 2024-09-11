@@ -6,7 +6,7 @@ player_id = utils.check_if_player(st.experimental_user['email'])
 
 st.image('5.png', width = 100)
 
-round = utils.get_api("https://api-football-v1.p.rapidapi.com/v3/fixtures/rounds", {"league":"39","season":"2022","current":"true"})[0][-2:].strip()
+round = utils.get_api("https://api-football-v1.p.rapidapi.com/v3/fixtures/rounds", {"league":"39","season":"2024","current":"true"})[0][-2:].strip()
 
 def colouring(val): 
 

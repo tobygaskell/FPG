@@ -1,0 +1,1 @@
+Each week you will pick a team you hope will earn you the most points - depending on the results from that weekends game you will earn the points below.
