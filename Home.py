@@ -18,7 +18,7 @@ import pandas as pd
 if 'page_view' not in st.session_state: 
     st.session_state['page_view'] = 'Make Choice'
 
-env = 'Local'
+env = 'Not Local'
 player = 'Player 1'
 round = random.choice([i+1 for i in range(3)])
 
