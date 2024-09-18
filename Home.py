@@ -18,18 +18,33 @@ import pandas as pd
 if 'page_view' not in st.session_state: 
     st.session_state['page_view'] = 'Make Choice'
 
-env = 'Not Local'
-player = 'Player 1'
+env = 'Local'
+player = 100
 round = random.choice([i+1 for i in range(3)])
+
+
+
+
+
 
 if env == 'Local':
     url = 'http://192.168.0.110:5001'
 else: 
     url = 'http://94.2.195.17:5000'
 
+
+data = {'Email':st.experimental_user.email}
+
+player_id = r.post(url + '/init_player', json = data).json()['player_id']
+
+
+# st.sidebar.caption()
+
 if st.sidebar.button('Rules', use_container_width=True): 
     rules.view_rules()
 # round = 'Testing'
+
+
 
 st.markdown('<h1 style="text-align: center;"> FPG </h1>', unsafe_allow_html=True)
 st.markdown('<h3 style="text-align: center;"> Round {} </h3>'.format(round), unsafe_allow_html=True)
@@ -62,6 +77,9 @@ st.sidebar.button('Draw Means More Round', disabled = False, use_container_width
 # st.sidebar.button('Double Round', disabled = not round_info['Double'], use_container_width=True )
 st.sidebar.button('Double Round', disabled = True, use_container_width = True)
 # st.sidebar.write(round_info['Double'])
+st.sidebar.caption('Email: {}'.format(st.experimental_user.email))
+st.sidebar.caption('Player ID: {}'.format(player_id))
+
 
 if st.session_state['page_view'] == 'Make Choice':
 
@@ -124,13 +142,13 @@ if st.session_state['page_view'] == 'Make Choice':
 
         if st.form_submit_button('Submit', use_container_width=True): 
 
-            data = {'Player' : player, 
+            data = {'Player' : player_id, 
                     'Choice' : team_choice, 
                     'Round'  : round}
             
             r.post(url + '/make_choice', json = data)
 
-            data = {'Player': player, 
+            data = {'Player': player_id, 
                     'Choice': team_choice, 
                     'Round': round}
             
@@ -143,7 +161,7 @@ if st.session_state['page_view'] == 'Make Choice':
             #         'DMM': round_info['DMM'], 
             #         'Doubled': round_info['Double']}
             
-            data = {'Player' : player, 
+            data = {'Player' : player_id, 
                     'Result' : result_data['Result'], 
                     'H2H' : result_data['H2H'], 
                     'Derby': result_data['Derby'], 
