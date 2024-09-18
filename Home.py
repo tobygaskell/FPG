@@ -30,7 +30,7 @@ round = random.choice([i+1 for i in range(3)])
 if env == 'Local':
     url = 'http://192.168.0.110:5001'
 else: 
-    url = 'http://94.2.195.17:5000'
+    url = 'http://94.2.195.17:5001'
 
 
 data = {'Email':st.experimental_user.email}
