@@ -5,7 +5,7 @@ import utils
 import streamlit.components.v1 as components
 
 
-# st.set_page_config(layout="wide")
+st.set_page_config(layout="wide")
 
 if 'page_view' not in st.session_state: 
     st.session_state['page_view'] = 'Make Choice'
