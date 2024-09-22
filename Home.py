@@ -29,9 +29,9 @@ if round_data['DMM'] and round_data['Double']:
 
 data = {'Email': st.experimental_user.email}
 
-# player_id = utils.fpg_api('init_player', data)['player_id']
+player_id = utils.fpg_api('init_player', data)['player_id']
 
-player_id = 2
+# player_id = 2
 
 if st.sidebar.button('Rules', use_container_width=True): 
     rules.view_rules()
