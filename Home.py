@@ -2,9 +2,8 @@ import streamlit as st
 import Rules as rules
 import pandas as pd
 import utils
-import streamlit.components.v1 as components
 import Dialogs
-
+import vis
 
 st.set_page_config(layout="wide")
 
@@ -31,7 +30,7 @@ data = {'Email': st.experimental_user.email}
 
 player_id = utils.fpg_api('init_player', data)['player_id']
 
-# player_id = 2
+# player_id = 6
 
 if st.sidebar.button('Rules', use_container_width=True): 
     rules.view_rules()
@@ -116,4 +115,46 @@ if st.session_state['page_view'] == 'See Standings':
     
     standings = pd.DataFrame(stand)
 
+    st.subheader('Overall Table', divider='grey')
+
     st.dataframe(standings[['USER', 'SCORE']], use_container_width=True, hide_index=True)
+
+    st.subheader('Points Details', divider='grey')
+
+    round_choice = st.selectbox('Pick a Round: ', [i+1 for i in range(round-1)])
+
+    data = {'Round' : round_choice} 
+
+    points = utils.fpg_api('get_points', data)
+
+    points = pd.DataFrame(points)
+
+    if len(points) != 0:
+
+        round_info = utils.fpg_api('get_round_info', data)
+        
+        left, right = st.columns(2)
+        left.button('Draw Means More Round', disabled = not round_info['DMM'], use_container_width=True, type= 'primary')
+        right.button('Double Points Round', disabled = not round_info['Double'], use_container_width=True, type='primary')
+
+        points['Result'] = points['basic_points'].map(lambda x: 'Won' if x == 1 else 'Draw' if x == 0 else 'Loss')
+
+        st.dataframe(points, use_container_width=True, hide_index=True)
+
+    else: 
+        st.warning('Score not yet calculated for this round - come back soon!')
+    
+    st.subheader('Charts', divider='grey')
+
+    chart_choice = st.radio('Pick Chart Type', 
+                            ['rolling_total', 'position'], 
+                            horizontal=True, 
+                            label_visibility='collapsed')
+
+    stand = utils.fpg_api('get_rolling_standings')
+
+    df = pd.DataFrame(stand)
+
+    fig = vis.linechart(df, chart_choice, False if chart_choice == 'rolling_total' else True)
+
+    st.plotly_chart(fig, config={'displayModeBar':False})
