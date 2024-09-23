@@ -155,6 +155,8 @@ if st.session_state['page_view'] == 'See Standings':
 
     df = pd.DataFrame(stand)
 
+    # st.dataframe(df, use_container_width=True)
+
     fig = vis.linechart(df, chart_choice, False if chart_choice == 'rolling_total' else True)
 
     st.plotly_chart(fig, config={'displayModeBar':False})

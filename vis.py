@@ -28,6 +28,11 @@ def linechart(df, col, reversed = False):
         height = 300,
         xaxis_title=None,
         yaxis_title=None,
-        showlegend=True
+        showlegend=True,
+        legend=dict(
+        orientation="h",
+        title = None
+    )
+
     )
     return fig
