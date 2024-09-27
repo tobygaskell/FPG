@@ -1,14 +1,11 @@
 import streamlit as st 
 import pandas as pd 
-# from streamlit_extras.switch_page_button import switch_page
 
 @st.dialog('How to Play FPG', width='large')
 def view_rules():
     '''
     '''
-
     st.subheader('Overall Rules', divider = True, anchor = False)
-
 
     with open('Rules/Rules.md') as file: 
         text = file.read()
@@ -22,6 +19,8 @@ def view_rules():
     st.dataframe(data, use_container_width = True, hide_index = True)
 
     st.write('However - be careful when you pick a specific team because you can\'t pick the same team more than twice a season.')
+
+    st.write('In the event of a tie break - it will be decided on your choices accumulative goal difference throughout the season.')
 
     st.subheader('Extra Rules', divider = True, anchor = False)
 
