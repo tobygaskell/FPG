@@ -20,8 +20,6 @@ def update_choice(team_choice, player_id, round_id):
         
         updated = utils.fpg_api('update_choice', data)['Updated']
 
-        # st.rerun()
-
         if updated: 
             st.success('You have updated your choices to {} for round {} - Thankyou for playing!'.format(team_choice, round_id))
 

@@ -31,8 +31,5 @@ def linechart(df, col, reversed = False):
         showlegend=True,
         legend=dict(
         orientation="h",
-        title = None
-    )
-
-    )
+        title = None))
     return fig

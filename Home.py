@@ -5,6 +5,7 @@ import utils
 import Dialogs
 import vis
 
+
 st.set_page_config(layout="wide")
 
 if 'page_view' not in st.session_state: 
@@ -50,8 +51,6 @@ if right.button('See FPG Table', use_container_width=True):
 
 st.markdown(' ')
 
-# st.sidebar.button(round_def, use_container_width=True)
-
 st.sidebar.markdown('---')
 
 st.sidebar.caption('Email: {}'.format(st.experimental_user.email))
@@ -63,8 +62,7 @@ if st.session_state['page_view'] == 'Make Choice':
 
     fixtures = utils.fpg_api('get_fixtures', data)
 
-    fix=pd.DataFrame(fixtures)
-    # st.write(fix)
+    fix = pd.DataFrame(fixtures)
 
     fix['vs'] = fix['DERBY'].map(lambda x: '-' if not x else '⚔️')
 
@@ -83,6 +81,19 @@ if st.session_state['page_view'] == 'Make Choice':
 
     teams = utils.fpg_api('get_available_choices', data)
 
+    with st.expander('See Previous Picks'):
+
+        data = {'Player': 6}
+
+        previous_choices = utils.fpg_api('get_previous_choices', data)   
+
+        prev_choices = pd.DataFrame(previous_choices) 
+
+        prev_choices['1st Pick'] = prev_choices['1st Pick'].map(lambda x: bool(x))
+        prev_choices['2nd Pick'] = prev_choices['2nd Pick'].map(lambda x: bool(x))
+
+        st.dataframe(prev_choices, use_container_width=True, hide_index=True)
+
     with st.form('Choice', border = False):
         team_choice = st.selectbox('Pick a Team:', [team['TEAM_NAME'] for team in  teams] )
 
@@ -93,8 +104,6 @@ if st.session_state['page_view'] == 'Make Choice':
                     'Round'  : round}
             
             submitted = utils.fpg_api('make_choice', data)
-            # submitted = {}r
-            # submitted['Submitted'] = 'Too Late'
 
     if submitted:
         if submitted['Submitted'] == True: 
@@ -115,13 +124,19 @@ if st.session_state['page_view'] == 'See Standings':
     
     standings = pd.DataFrame(stand)
 
+    standings['Position'] = standings['Position'].map(lambda n: "%d%s" % (n,"tsnrhtdd"[(n//10%10!=1)*(n%10<4)*n%10::4]))
+
     st.subheader('Overall Table', divider='grey')
 
-    st.dataframe(standings[['USER', 'SCORE']], use_container_width=True, hide_index=True)
+    st.dataframe(standings[['Position', 'User', 'Goal Diff', 'Score']], use_container_width=True, hide_index=True)
 
     st.subheader('Points Details', divider='grey')
 
-    round_choice = st.selectbox('Pick a Round: ', [i+1 for i in range(round-1)])
+    round_ops = [i+1 for i in range(round-1)]
+
+    round_ops.sort(reverse=True)
+
+    round_choice = st.selectbox('Pick a Round: ', round_ops)
 
     data = {'Round' : round_choice} 
 
@@ -137,9 +152,9 @@ if st.session_state['page_view'] == 'See Standings':
         left.button('Draw Means More Round', disabled = not round_info['DMM'], use_container_width=True, type= 'primary')
         right.button('Double Points Round', disabled = not round_info['Double'], use_container_width=True, type='primary')
 
-        points['Result'] = points['basic_points'].map(lambda x: 'Won' if x == 1 else 'Draw' if x == 0 else 'Loss')
+        points['Result'] = points['Basic'].map(lambda x: 'Won' if x == 1 else 'Draw' if x == 0 else 'Loss')
 
-        st.dataframe(points, use_container_width=True, hide_index=True)
+        st.dataframe(points[['User', 'Choice', 'Result', 'Basic', 'Head 2 Head', 'Derby', 'Draw Means More', 'Subtotal', 'Total']], use_container_width=True, hide_index=True)
 
     else: 
         st.warning('Score not yet calculated for this round - come back soon!')
@@ -154,8 +169,6 @@ if st.session_state['page_view'] == 'See Standings':
     stand = utils.fpg_api('get_rolling_standings')
 
     df = pd.DataFrame(stand)
-
-    # st.dataframe(df, use_container_width=True)
 
     fig = vis.linechart(df, chart_choice, False if chart_choice == 'rolling_total' else True)
 
