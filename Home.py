@@ -1,4 +1,4 @@
-import streamlit as st 
+import streamlit as st
 import Rules as rules
 import pandas as pd
 import utils
@@ -8,7 +8,7 @@ import vis
 
 st.set_page_config(layout="wide")
 
-if 'page_view' not in st.session_state: 
+if 'page_view' not in st.session_state:
     st.session_state['page_view'] = 'Make Choice'
 
 round = utils.fpg_api_static('current_round')['Round ID']
@@ -18,10 +18,10 @@ round_data = utils.fpg_api('get_round_info', {'Round': round})
 round_def = 'Normal Round'
 submitted = False
 
-if round_data['DMM']: 
+if round_data['DMM']:
     round_def = 'Draw Means More Round!'
 
-if round_data['Double']: 
+if round_data['Double']:
     round_def = 'Double Points Round!'
 
 if round_data['DMM'] and round_data['Double']:
@@ -33,7 +33,7 @@ player_id = utils.fpg_api('init_player', data)['player_id']
 
 # player_id = 6
 
-if st.sidebar.button('Rules', use_container_width=True): 
+if st.sidebar.button('Rules', use_container_width=True):
     rules.view_rules()
 
 st.markdown('<h1 style="text-align: center;"> FPG </h1>', unsafe_allow_html=True)
@@ -83,7 +83,7 @@ if st.session_state['page_view'] == 'Make Choice':
 
     with st.expander('See Previous Picks'):
 
-        data = {'Player': 6}
+        data = {'Player': player_id}
 
         previous_choices = utils.fpg_api('get_previous_choices', data)   
 
