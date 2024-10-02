@@ -2,11 +2,12 @@ import streamlit as st
 import utils
 
 @st.dialog('Update Choice')
-def update_choice(team_choice, player_id, round_id):
+def update_choice(team_choice, player_id, round_id, current_choice):
     '''
     '''
     updated = False
-    st.write('You have already submitted a choice for this round.')
+
+    st.write('You have already submitted {} for this round.'.format(current_choice))
 
     st.write('Would you like to resubmit and update your choice to be {} for round {} ?'.format(team_choice, round_id))
 
