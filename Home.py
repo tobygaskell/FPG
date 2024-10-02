@@ -5,7 +5,6 @@ import utils
 import Dialogs
 import vis
 
-
 st.set_page_config(layout="wide")
 
 if 'page_view' not in st.session_state:
@@ -31,13 +30,23 @@ data = {'Email': st.experimental_user.email}
 
 player_id = utils.fpg_api('init_player', data)['player_id']
 
-# player_id = 6
-
 if st.sidebar.button('Rules', use_container_width=True):
     rules.view_rules()
 
+data = {'Round': round}
+
+choices = utils.fpg_api('get_choices', data)
+
 st.markdown('<h1 style="text-align: center;"> FPG </h1>', unsafe_allow_html=True)
 st.markdown('<h3 style="text-align: center;"> Round {} - {} </h3>'.format(round, round_def), unsafe_allow_html=True)
+
+try:
+    current_choice = choices[str(player_id)]
+    st.markdown('<h5 style="text-align: center;"> Current Choice: {} </h5>'.format(current_choice), unsafe_allow_html=True)
+
+except: 
+    current_choice = None
+    st.markdown('<h3 style="text-align:center;"> 💥 Please make a choice 💥 </h3>', unsafe_allow_html= True)
 
 st.markdown('---')
 
@@ -55,6 +64,7 @@ st.sidebar.markdown('---')
 
 st.sidebar.caption('Email: {}'.format(st.experimental_user.email))
 st.sidebar.caption('Player ID: {}'.format(player_id))
+
 
 if st.session_state['page_view'] == 'Make Choice':
 
@@ -110,7 +120,7 @@ if st.session_state['page_view'] == 'Make Choice':
             st.success('You have submitted {} as you choice for round {} - Thankyou for playing!'.format(team_choice, round))
 
         elif submitted['Submitted'] == 'Already Chosen':
-            Dialogs.update_choice(team_choice, player_id, round)
+            Dialogs.update_choice(team_choice, player_id, round, current_choice)
 
         elif submitted['Submitted'] == 'Too Late': 
             st.error('Too Late - It\'s past the cut off time for submitting a choice for round {}! Come back after the games have finished.'.format(round))
