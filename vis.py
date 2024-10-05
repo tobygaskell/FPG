@@ -10,12 +10,14 @@ def linechart(df, col, reversed=False):
         y=col,
         color='User',
         markers=True)
+
     for i in range(len(fig.data)):
         fig.data[i].line.color = '#B0B0B0'
         length = len(px.colors.qualitative.Pastel2)
         fig.data[i].marker.color = px.colors.qualitative.Pastel2[i % length]
 
     fig.update_traces(marker=dict(size=12))
+
     fig.update_xaxes(showgrid=False,
                      range=[0, 38])
 
@@ -34,10 +36,10 @@ def linechart(df, col, reversed=False):
         legend=dict(
             orientation="h",
             title=None),
-        dragmode=False,  # Disable zoom and panning
-        xaxis_fixedrange=True,  # Disable x-axis zoom
-        yaxis_fixedrange=True 
-      )  # Disable y-axis zoom)
+        dragmode=False,
+        xaxis_fixedrange=True,
+        yaxis_fixedrange=True
+      )
     return fig
 
 
@@ -50,9 +52,9 @@ def highlight_row(row, player_id):
     '''
     bcolor = '#f7f6fa' if row.name == player_id else ''
 
-    color = ['background-color: {};color: #808080'.format(bcolor) for i in range(len(row))]
+    color = 'background-color: {};color: #808080'.format(bcolor)
 
-    return color
+    return [color for i in range(len(row))]
 
 
 def color_totals(res, inc_zero=False):
