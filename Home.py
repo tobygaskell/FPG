@@ -10,9 +10,16 @@ st.set_page_config(layout="wide")
 if 'page_view' not in st.session_state:
     st.session_state['page_view'] = 'Make Choice'
 
-round = utils.fpg_api_static('current_round')['Round ID']
+player = utils.fpg_api_get('init_player', email=st.experimental_user.email)
 
-round_data = utils.fpg_api('get_round_info', {'Round': round})
+# palyer_id = player['player_id']
+player_id = 6
+
+round = utils.fpg_api_static('current_round', player_id=player_id)['Round ID']
+
+round_data = utils.fpg_api_get('get_round_info',
+                               round_id=round,
+                               player_id=player_id)
 
 round_def = 'Normal Round'
 submitted = False
@@ -26,27 +33,30 @@ if round_data['Double']:
 if round_data['DMM'] and round_data['Double']:
     round_def = 'Draw Means Mores AND Double Points Round!!'
 
-data = {'Email': st.experimental_user.email}
-
-player_id = utils.fpg_api('init_player', data)['player_id']
-
 if st.sidebar.button('Rules', use_container_width=True):
     rules.view_rules()
 
-data = {'Round': round}
+choices = utils.fpg_api_get('get_choices', round_id=round, player_id=player_id)
 
-choices = utils.fpg_api('get_choices', data)
+st.markdown('<h1 style="text-align: center;"> FPG </h1>',
+            unsafe_allow_html=True)
 
-st.markdown('<h1 style="text-align: center;"> FPG </h1>', unsafe_allow_html=True)
-st.markdown('<h3 style="text-align: center;"> Round {} - {} </h3>'.format(round, round_def), unsafe_allow_html=True)
+text = '<h3 style="text-align: center;"> Round {} - {} </h3>'
+
+st.markdown(text.format(round, round_def),
+            unsafe_allow_html=True)
 
 try:
     current_choice = choices[str(player_id)]
-    st.markdown('<h5 style="text-align: center;"> Current Choice: {} </h5>'.format(current_choice), unsafe_allow_html=True)
+    text = '<h5 style="text-align: center;"> Current Choice: {} </h5>'
+    st.markdown(text.format(current_choice),
+                unsafe_allow_html=True)
 
-except: 
+except BaseException:
     current_choice = None
-    st.markdown('<h3 style="text-align:center;"> 💥 Please make a choice 💥 </h3>', unsafe_allow_html= True)
+    text = '<h3 style="text-align:center;"> 💥 Please make a choice 💥 </h3>'
+    st.markdown(text,
+                unsafe_allow_html=True)
 
 st.markdown('---')
 
@@ -63,47 +73,49 @@ st.markdown(' ')
 st.sidebar.markdown('---')
 
 st.sidebar.caption('Email: {}'.format(st.experimental_user.email))
-st.sidebar.caption('Player ID: {}'.format(player_id))
 
+st.sidebar.caption('Player ID: {}'.format(player_id))
 
 if st.session_state['page_view'] == 'Make Choice':
 
-    data = {'Round': round}
-
-    fixtures = utils.fpg_api('get_fixtures', data)
+    fixtures = utils.fpg_api_get('get_fixtures',
+                                 round_id=round,
+                                 player_id=player_id)
 
     fix = pd.DataFrame(fixtures)
 
     fix['vs'] = fix['DERBY'].map(lambda x: '-' if not x else '⚔️')
 
-    fix['Fixtures'] = fix['HOME_TEAM'] + ' ' + fix['vs'] + ' ' + fix['AWAY_TEAM']
+    fix['Fixtures'] = (fix['HOME_TEAM'] +
+                       ' ' +
+                       fix['vs'] +
+                       ' ' +
+                       fix['AWAY_TEAM'])
 
     fix.rename(columns={'HOME_LOGO': ' ',
                         'AWAY_LOGO': '  '},
                inplace=True)
 
     st.caption('⚔️ means this fixture is a derby')
+
     st.dataframe(fix[[' ', 'Fixtures', '  ']], column_config={
         " ": st.column_config.ImageColumn(),
         "  ": st.column_config.ImageColumn()},
         use_container_width=True, hide_index=True)
 
-    data = {'Player': player_id}
-
-    teams = utils.fpg_api('get_available_choices', data)
+    teams = utils.fpg_api_get('get_available_choices', player_id=player_id)
 
     with st.expander('See Previous Picks'):
 
-        data = {'Player': player_id}
+        previous_choices = utils.fpg_api_get('get_previous_choices',
+                                             player_id=player_id)
 
-        previous_choices = utils.fpg_api('get_previous_choices', data)
+        prev = pd.DataFrame(previous_choices)
 
-        prev_choices = pd.DataFrame(previous_choices)
+        prev['1st Pick'] = prev['1st Pick'].map(lambda x: bool(x))
+        prev['2nd Pick'] = prev['2nd Pick'].map(lambda x: bool(x))
 
-        prev_choices['1st Pick'] = prev_choices['1st Pick'].map(lambda x: bool(x))
-        prev_choices['2nd Pick'] = prev_choices['2nd Pick'].map(lambda x: bool(x))
-
-        st.dataframe(prev_choices, use_container_width=True, hide_index=True)
+        st.dataframe(prev, use_container_width=True, hide_index=True)
 
     with st.form('Choice', border=False):
         team_choice = st.selectbox('Pick a Team:',
@@ -115,24 +127,31 @@ if st.session_state['page_view'] == 'Make Choice':
                     'Choice': team_choice,
                     'Round': round}
 
-            submitted = utils.fpg_api('make_choice', data)
+            submitted = utils.fpg_api_post('make_choice', data)
 
     if submitted:
         if submitted['Submitted'] is True:
-            st.success('You have submitted {} as you choice for round {} - Thankyou for playing!'.format(team_choice, round))
+
+            text = 'You have submitted {} as you choice for round {}!'
+
+            st.success(text.format(team_choice, round))
 
         elif submitted['Submitted'] == 'Already Chosen':
-            Dialogs.update_choice(team_choice, player_id, round, current_choice)
+            Dialogs.update_choice(team_choice, player_id,
+                                  round,
+                                  current_choice)
 
         elif submitted['Submitted'] == 'Too Late':
-            st.error('Too Late - It\'s past the cut off time for submitting a choice for round {}! Come back after the games have finished.'.format(round))
+
+            st.error('Too Late - It\'s past the cut off time for submitting a \
+choice for round {}! Come back after the games have finished.'.format(round))
 
         else:
             st.error('There was an issue submitting your choicer')
 
 if st.session_state['page_view'] == 'See Standings':
 
-    stand = utils.fpg_api('get_standings')
+    stand = utils.fpg_api_get('get_standings', player_id=player_id)
 
     standings = pd.DataFrame(stand)
 
@@ -142,10 +161,6 @@ if st.session_state['page_view'] == 'See Standings':
                                             (n % 10 < 4) * n % 10::4])))
 
     standings = standings.set_index('player_id', drop=True)
-
-    # st.write(standings)
-
-    # row_color = st.color_picker('pick a color')
 
     st.subheader('Overall Table', divider='grey')
 
@@ -171,15 +186,18 @@ if st.session_state['page_view'] == 'See Standings':
 
     round_choice = st.selectbox('Pick a Round: ', round_ops)
 
-    data = {'Round': round_choice}
-
-    points = utils.fpg_api('get_points', data)
+    points = utils.fpg_api_get('get_points',
+                               round_id=round_choice,
+                               player_id=player_id)
 
     points = pd.DataFrame(points)
 
     if len(points) != 0:
 
-        round_info = utils.fpg_api('get_round_info', data)
+        round_info = utils.fpg_api_get('get_round_info',
+                                       round_id=round_choice,
+                                       player_id=player_id)
+
         left, right = st.columns(2)
         left.button('Draw Means More Round',
                     disabled=not round_info['DMM'],
@@ -196,13 +214,32 @@ if st.session_state['page_view'] == 'See Standings':
         styled_points = (points.style
                          .apply(lambda x: vis.highlight_row(x, player_id),
                                 axis=1)
-                         .applymap(vis.color_results, subset=['Result'])
-                         .applymap(vis.color_totals, subset=['Total'], inc_zero=True)
-                         .applymap(vis.color_totals, subset=['Subtotal'], inc_zero=True)
-                         .applymap(vis.color_totals, subset=['Basic'], inc_zero=True)
-                         .applymap(vis.color_totals, subset=['Head 2 Head'], inc_zero=True)
-                         .applymap(vis.color_totals, subset=['Derby'], inc_zero=True)
-                         .applymap(vis.color_totals, subset=['Draw Means More'], inc_zero=True))
+                         .applymap(vis.color_results,
+                                   subset=['Result'])
+
+                         .applymap(vis.color_totals,
+                                   subset=['Total'],
+                                   inc_zero=True)
+
+                         .applymap(vis.color_totals,
+                                   subset=['Subtotal'],
+                                   inc_zero=True)
+
+                         .applymap(vis.color_totals,
+                                   subset=['Basic'],
+                                   inc_zero=True)
+
+                         .applymap(vis.color_totals,
+                                   subset=['Head 2 Head'],
+                                   inc_zero=True)
+
+                         .applymap(vis.color_totals,
+                                   subset=['Derby'],
+                                   inc_zero=True)
+
+                         .applymap(vis.color_totals,
+                                   subset=['Draw Means More'],
+                                   inc_zero=True))
 
         st.dataframe(styled_points,
                      use_container_width=True,
@@ -218,7 +255,7 @@ if st.session_state['page_view'] == 'See Standings':
                             horizontal=True,
                             label_visibility='collapsed')
 
-    stand = utils.fpg_api('get_rolling_standings')
+    stand = utils.fpg_api_get('get_rolling_standings', player_id=player_id)
 
     df = pd.DataFrame(stand)
 
@@ -226,6 +263,3 @@ if st.session_state['page_view'] == 'See Standings':
                         False if chart_choice == 'Score' else True)
 
     st.plotly_chart(fig, config={'displayModeBar': False})
-
-
-# .applymap(highlight_score, subset=['Score'])

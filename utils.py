@@ -1,29 +1,47 @@
-import streamlit as st 
+import streamlit as st
 import requests as r
 
 
-def fpg_api(endpoint, data = None):
+def fpg_api_get(endpoint, **params):
     '''
     '''
     url = st.secrets['fpg']['host']
 
-    if data == None:
-        response = r.get(url + endpoint).json()
+    url = url + endpoint + '?'
 
-    else:
-        response = r.post(url + endpoint, json = data).json()
-        # st.write(response)
-    return response
+    for key, value in params.items():
 
-@st.cache_data(ttl = 600)
-def fpg_api_static(endpoint, data = None):
+        url = url + '&{}={}'.format(key, value)
+
+    # st.write(url)
+    response = r.get(url)
+
+    return response.json()
+
+
+def fpg_api_post(endpoint, data):
     '''
     '''
     url = st.secrets['fpg']['host']
 
-    if data == None:
-        response = r.get(url + endpoint).json()
+    response = r.post(url + endpoint, json=data).json()
 
-    else:
-        response = r.post(url + endpoint, json = data).json()
     return response
+
+
+@st.cache_data(ttl=600)
+def fpg_api_static(endpoint, **params):
+    '''
+    '''
+    url = st.secrets['fpg']['host']
+
+    url = url + endpoint
+
+    for key, value in params.items():
+
+        url = url + '?{}={}'.format(key, value)
+
+    # st.write(url)
+    response = r.get(url)
+
+    return response.json()
