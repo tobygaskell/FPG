@@ -12,8 +12,8 @@ if 'page_view' not in st.session_state:
 
 player = utils.fpg_api_get('init_player', email=st.experimental_user.email)
 
-# palyer_id = player['player_id']
-player_id = 6
+player_id = player['player_id']
+# player_id = 6
 
 round = utils.fpg_api_static('current_round', player_id=player_id)['Round ID']
 
