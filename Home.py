@@ -5,6 +5,7 @@ import utils
 import Dialogs
 import vis
 
+
 st.set_page_config(layout="wide")
 
 if 'page_view' not in st.session_state:
@@ -23,6 +24,7 @@ round_data = utils.fpg_api_get('get_round_info',
 
 round_def = 'Normal Round'
 submitted = False
+cut_off = round_data['Cut Off']
 
 if round_data['DMM']:
     round_def = 'Draw Means More Round!'
@@ -35,6 +37,13 @@ if round_data['DMM'] and round_data['Double']:
 
 if st.sidebar.button('Rules', use_container_width=True):
     rules.view_rules()
+
+
+st.sidebar.markdown('---')
+
+st.sidebar.caption('Email: {}'.format(st.experimental_user.email))
+
+st.sidebar.caption('Player ID: {}'.format(player_id))
 
 choices = utils.fpg_api_get('get_choices', round_id=round, player_id=player_id)
 
@@ -52,10 +61,12 @@ try:
     st.markdown(text.format(current_choice),
                 unsafe_allow_html=True)
 
+    st.sidebar.caption('Cut Off : {}'.format(cut_off))
+
 except BaseException:
     current_choice = None
-    text = '<h3 style="text-align:center;"> 💥 Please make a choice 💥 </h3>'
-    st.markdown(text,
+    text = '<h5 style="text-align:center;"> ‼️ Please make a choice by {} ‼️ </h5>'
+    st.markdown(text.format(cut_off),
                 unsafe_allow_html=True)
 
 st.markdown('---')
@@ -70,11 +81,6 @@ if right.button('See FPG Table', use_container_width=True):
 
 st.markdown(' ')
 
-st.sidebar.markdown('---')
-
-st.sidebar.caption('Email: {}'.format(st.experimental_user.email))
-
-st.sidebar.caption('Player ID: {}'.format(player_id))
 
 if st.session_state['page_view'] == 'Make Choice':
 
@@ -104,18 +110,6 @@ if st.session_state['page_view'] == 'Make Choice':
         use_container_width=True, hide_index=True)
 
     teams = utils.fpg_api_get('get_available_choices', player_id=player_id)
-
-    with st.expander('See Previous Picks'):
-
-        previous_choices = utils.fpg_api_get('get_previous_choices',
-                                             player_id=player_id)
-
-        prev = pd.DataFrame(previous_choices)
-
-        prev['1st Pick'] = prev['1st Pick'].map(lambda x: bool(x))
-        prev['2nd Pick'] = prev['2nd Pick'].map(lambda x: bool(x))
-
-        st.dataframe(prev, use_container_width=True, hide_index=True)
 
     with st.form('Choice', border=False):
         team_choice = st.selectbox('Pick a Team:',
@@ -148,6 +142,42 @@ choice for round {}! Come back after the games have finished.'.format(round))
 
         else:
             st.error('There was an issue submitting your choicer')
+    st.markdown('---')
+    with st.expander('See Previous Picks'):
+
+        see_points = st.toggle('Points Earned', value=False)
+
+        if not see_points:
+            previous_choices = utils.fpg_api_get('get_previous_choices',
+                                                 player_id=player_id)
+
+            prev = pd.DataFrame(previous_choices)
+
+            prev['1st Pick'] = prev['1st Pick'].map(lambda x: bool(x))
+            prev['2nd Pick'] = prev['2nd Pick'].map(lambda x: bool(x))
+
+            prev = prev.style.apply(lambda x: vis.highlight_choices(x), axis=1)
+
+            st.dataframe(prev, use_container_width=True, hide_index=True)
+        else:
+            previous_points = utils.fpg_api_get('get_previous_points',
+                                                player_id=player_id)
+
+            prev = pd.DataFrame(previous_points)
+            # prev
+
+            prev = (prev.style
+                    # .apply(lambda x: vis.highlight_choices(x, False), axis=1)
+                    .map(vis.color_totals, subset=['1st Pick'], inc_zero=True)
+                    .map(vis.color_totals, subset=['2nd Pick'], inc_zero=True)
+                    .format({'1st Pick': '{:.0f}',
+                            '2nd Pick': '{:.0f}'}))
+            try:
+                st.dataframe(prev,
+                             use_container_width=True,
+                             hide_index=True)
+            except TypeError:
+                st.error('No Points Earned')
 
 if st.session_state['page_view'] == 'See Standings':
 
@@ -199,6 +229,7 @@ if st.session_state['page_view'] == 'See Standings':
                                        player_id=player_id)
 
         left, right = st.columns(2)
+
         left.button('Draw Means More Round',
                     disabled=not round_info['DMM'],
                     use_container_width=True,
@@ -214,32 +245,33 @@ if st.session_state['page_view'] == 'See Standings':
         styled_points = (points.style
                          .apply(lambda x: vis.highlight_row(x, player_id),
                                 axis=1)
-                         .applymap(vis.color_results,
-                                   subset=['Result'])
 
-                         .applymap(vis.color_totals,
-                                   subset=['Total'],
-                                   inc_zero=True)
+                         .map(vis.color_results,
+                              subset=['Result'])
 
-                         .applymap(vis.color_totals,
-                                   subset=['Subtotal'],
-                                   inc_zero=True)
+                         .map(vis.color_totals,
+                              subset=['Total'],
+                              inc_zero=True)
 
-                         .applymap(vis.color_totals,
-                                   subset=['Basic'],
-                                   inc_zero=True)
+                         .map(vis.color_totals,
+                              subset=['Subtotal'],
+                              inc_zero=True)
 
-                         .applymap(vis.color_totals,
-                                   subset=['Head 2 Head'],
-                                   inc_zero=True)
+                         .map(vis.color_totals,
+                              subset=['Basic'],
+                              inc_zero=True)
 
-                         .applymap(vis.color_totals,
-                                   subset=['Derby'],
-                                   inc_zero=True)
+                         .map(vis.color_totals,
+                              subset=['Head 2 Head'],
+                              inc_zero=True)
 
-                         .applymap(vis.color_totals,
-                                   subset=['Draw Means More'],
-                                   inc_zero=True))
+                         .map(vis.color_totals,
+                              subset=['Derby'],
+                              inc_zero=True)
+
+                         .map(vis.color_totals,
+                              subset=['Draw Means More'],
+                              inc_zero=True))
 
         st.dataframe(styled_points,
                      use_container_width=True,

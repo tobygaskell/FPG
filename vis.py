@@ -24,7 +24,7 @@ def linechart(df, col, reversed=False):
     fig.update_yaxes(showgrid=False)
 
     if reversed:
-        fig.update_yaxes(range=[23, 0], autorange=False)
+        fig.update_yaxes(range=[30, 0], autorange=False)
 
     fig.update_layout(
         autosize=False,
@@ -99,3 +99,31 @@ def color_results(res):
         tcolor = '#808080'
 
     return 'color: {}'.format(tcolor)
+
+
+def highlight_choices(x):
+    '''
+    _summary_
+
+    Args:
+        x (_type_): _description_
+    '''
+    tcolor = '#808080'
+    opacity = 0.1
+    
+    if not x['2nd Pick'] and not x['1st Pick']:
+        # Green
+        tcolor = '#a5ddc3'
+        tcolor = 'rgb(165, 221, 194, {})'.format(opacity)
+
+    if x['1st Pick']:
+        # Yellow
+        tcolor = '#fbc29c'
+        tcolor = 'rgb(251, 194, 156, {})'.format(opacity)
+
+    if x['2nd Pick']:
+        # Red
+        tcolor = '#F56769'
+        tcolor = 'rgb(245, 103, 105, {})'.format(opacity)
+
+    return ['background-color: {};'.format(tcolor) for _ in range(len(x))]
