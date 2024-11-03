@@ -1,9 +1,8 @@
 import streamlit as st
 import Rules as rules
-import pandas as pd
 import utils
-import Dialogs
-import vis
+import make_choice as chs
+import see_table as tbl
 
 
 st.set_page_config(layout="wide")
@@ -23,7 +22,7 @@ round_data = utils.fpg_api_get('get_round_info',
                                player_id=player_id)
 
 round_def = 'Normal Round'
-submitted = False
+
 cut_off = round_data['Cut Off']
 
 if round_data['DMM']:
@@ -83,215 +82,7 @@ st.markdown(' ')
 
 
 if st.session_state['page_view'] == 'Make Choice':
-
-    fixtures = utils.fpg_api_get('get_fixtures',
-                                 round_id=round,
-                                 player_id=player_id)
-
-    fix = pd.DataFrame(fixtures)
-
-    fix['vs'] = fix['DERBY'].map(lambda x: '-' if not x else '⚔️')
-
-    fix['Fixtures'] = (fix['HOME_TEAM'] +
-                       ' ' +
-                       fix['vs'] +
-                       ' ' +
-                       fix['AWAY_TEAM'])
-
-    fix.rename(columns={'HOME_LOGO': ' ',
-                        'AWAY_LOGO': '  '},
-               inplace=True)
-
-    st.caption('⚔️ means this fixture is a derby')
-
-    st.dataframe(fix[[' ', 'Fixtures', '  ']], column_config={
-        " ": st.column_config.ImageColumn(),
-        "  ": st.column_config.ImageColumn()},
-        use_container_width=True, hide_index=True)
-
-    teams = utils.fpg_api_get('get_available_choices', player_id=player_id)
-
-    with st.form('Choice', border=False):
-        team_choice = st.selectbox('Pick a Team:',
-                                   [team['TEAM_NAME'] for team in teams])
-
-        if st.form_submit_button('Submit', use_container_width=True):
-
-            data = {'Player': player_id,
-                    'Choice': team_choice,
-                    'Round': round}
-
-            submitted = utils.fpg_api_post('make_choice', data)
-
-    if submitted:
-        if submitted['Submitted'] is True:
-
-            text = 'You have submitted {} as you choice for round {}!'
-
-            st.success(text.format(team_choice, round))
-
-        elif submitted['Submitted'] == 'Already Chosen':
-            Dialogs.update_choice(team_choice, player_id,
-                                  round,
-                                  current_choice)
-
-        elif submitted['Submitted'] == 'Too Late':
-
-            st.error('Too Late - It\'s past the cut off time for submitting a \
-choice for round {}! Come back after the games have finished.'.format(round))
-
-        else:
-            st.error('There was an issue submitting your choicer')
-    st.markdown('---')
-    with st.expander('See Previous Picks'):
-
-        see_points = st.toggle('Points Earned', value=False)
-
-        if not see_points:
-            previous_choices = utils.fpg_api_get('get_previous_choices',
-                                                 player_id=player_id)
-
-            prev = pd.DataFrame(previous_choices)
-
-            prev['1st Pick'] = prev['1st Pick'].map(lambda x: bool(x))
-            prev['2nd Pick'] = prev['2nd Pick'].map(lambda x: bool(x))
-
-            prev = prev.style.apply(lambda x: vis.highlight_choices(x), axis=1)
-
-            st.dataframe(prev, use_container_width=True, hide_index=True)
-        else:
-            previous_points = utils.fpg_api_get('get_previous_points',
-                                                player_id=player_id)
-
-            prev = pd.DataFrame(previous_points)
-            # prev
-
-            prev = (prev.style
-                    # .apply(lambda x: vis.highlight_choices(x, False), axis=1)
-                    .map(vis.color_totals, subset=['1st Pick'], inc_zero=True)
-                    .map(vis.color_totals, subset=['2nd Pick'], inc_zero=True)
-                    .format({'1st Pick': '{:.0f}',
-                            '2nd Pick': '{:.0f}'}))
-            try:
-                st.dataframe(prev,
-                             use_container_width=True,
-                             hide_index=True)
-            except TypeError:
-                st.error('No Points Earned')
+    chs.main(player_id, current_choice, round)
 
 if st.session_state['page_view'] == 'See Standings':
-
-    stand = utils.fpg_api_get('get_standings', player_id=player_id)
-
-    standings = pd.DataFrame(stand)
-
-    standings['Position'] = (standings['Position']
-                             .map(lambda n: "%d%s" %
-                             (n, "tsnrhtdd"[(n//10 % 10 != 1) *
-                                            (n % 10 < 4) * n % 10::4])))
-
-    standings = standings.set_index('player_id', drop=True)
-
-    st.subheader('Overall Table', divider='grey')
-
-    if st.toggle('See Goal Difference'):
-        standings = standings[['Position', 'User', 'Goal Diff', 'Score']]
-
-    else:
-        standings = standings[['Position', 'User', 'Score']]
-
-    styled_standings = (standings.style
-                        .apply(lambda x: vis.highlight_row(x, player_id),
-                               axis=1))
-
-    st.dataframe(styled_standings,
-                 use_container_width=True,
-                 hide_index=True)
-
-    st.subheader('Points Details', divider='grey')
-
-    round_ops = [i+1 for i in range(round-1)]
-
-    round_ops.sort(reverse=True)
-
-    round_choice = st.selectbox('Pick a Round: ', round_ops)
-
-    points = utils.fpg_api_get('get_points',
-                               round_id=round_choice,
-                               player_id=player_id)
-
-    points = pd.DataFrame(points)
-
-    if len(points) != 0:
-
-        round_info = utils.fpg_api_get('get_round_info',
-                                       round_id=round_choice,
-                                       player_id=player_id)
-
-        left, right = st.columns(2)
-
-        left.button('Draw Means More Round',
-                    disabled=not round_info['DMM'],
-                    use_container_width=True,
-                    type='primary')
-
-        right.button('Double Points Round',
-                     disabled=not round_info['Double'],
-                     use_container_width=True,
-                     type='primary')
-
-        points = points.set_index('player_id', drop=True)
-
-        styled_points = (points.style
-                         .apply(lambda x: vis.highlight_row(x, player_id),
-                                axis=1)
-
-                         .map(vis.color_results,
-                              subset=['Result'])
-
-                         .map(vis.color_totals,
-                              subset=['Total'],
-                              inc_zero=True)
-
-                         .map(vis.color_totals,
-                              subset=['Subtotal'],
-                              inc_zero=True)
-
-                         .map(vis.color_totals,
-                              subset=['Basic'],
-                              inc_zero=True)
-
-                         .map(vis.color_totals,
-                              subset=['Head 2 Head'],
-                              inc_zero=True)
-
-                         .map(vis.color_totals,
-                              subset=['Derby'],
-                              inc_zero=True)
-
-                         .map(vis.color_totals,
-                              subset=['Draw Means More'],
-                              inc_zero=True))
-
-        st.dataframe(styled_points,
-                     use_container_width=True,
-                     hide_index=True)
-
-    else:
-        st.warning('Score not yet calculated for this round - come back soon!')
-
-    st.subheader('Charts', divider='grey')
-
-    chart_choice = st.radio('Pick Chart Type',
-                            ['Score', 'Position'],
-                            horizontal=True,
-                            label_visibility='collapsed')
-
-    stand = utils.fpg_api_get('get_rolling_standings', player_id=player_id)
-
-    df = pd.DataFrame(stand)
-
-    fig = vis.linechart(df, chart_choice,
-                        False if chart_choice == 'Score' else True)
-
-    st.plotly_chart(fig, config={'displayModeBar': False})
+    tbl.main(player_id, round)
