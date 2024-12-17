@@ -1,0 +1,1 @@
+If you choose a team and are the only person to have picked that team that week. You will be awarded an extra point if they go on to win. 

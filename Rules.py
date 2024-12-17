@@ -5,7 +5,7 @@ import streamlit as st
 def view_rules():
     '''
     '''
-    st.subheader('Overall Rules', divider=True, anchor=False)
+    st.subheader('Overall Rules', divider='blue', anchor=False)
 
     with open('Rules/Rules.md') as file:
         text = file.read()
@@ -22,7 +22,7 @@ def view_rules():
 
     st.write('In the event of a tie break - it will be decided on your choices accumulative goal difference throughout the season.')
 
-    st.subheader('Extra Rules', divider=True, anchor=False)
+    st.subheader('Extra Rules', divider='blue', anchor=False)
 
     tab = st.tabs(['Head 2 Head Game',
                    'Double Point Round',
@@ -76,7 +76,14 @@ def view_rules():
 
             st.dataframe(data, use_container_width=True, hide_index=True)
 
-    st.subheader('Example', divider=True, anchor=False)
+    st.subheader('Bonus Point', divider='blue', anchor=False)
+
+    with open('Rules/BonusPoints.md') as file:
+        text = file.read()
+
+    st.markdown(text)
+
+    st.subheader('Example', divider='blue', anchor=False)
     # with tab[4]:
     with open('Rules/Example.md') as file:
         text = file.read()
@@ -90,9 +97,11 @@ def view_rules():
             'H2H': ['+1', '-1', '0', '0'],
             'Derby': ['+1', '-1', '0', '-1'],
             'DMM': ['0', '0', '+2', '+2'],
-            'Sub Total': ['+3', '-3', '+2', '+1'],
+            'BP': ['+1', '0', '0', '0'],
+            'Sub Total': ['+4', '-3', '+2', '+1'],
             'Doubled?': [True, True, True, True],
-            'Total': ['+6', '-6', '+4', '+2'],
+
+            'Total': ['+8', '-6', '+4', '+2'],
             }
 
     st.dataframe(data, use_container_width=True, hide_index=True)

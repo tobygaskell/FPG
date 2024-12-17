@@ -1,5 +1,4 @@
 import plotly.express as px
-import streamlit as st 
 
 
 def barchart(df, x, y, color):
@@ -8,18 +7,16 @@ def barchart(df, x, y, color):
     df['Performance'] = df[color].apply(lambda x: '+ Points' if x > 0 else ('0 Points' if x == 0 else '- Points'))
     df[color] = df[color].map(lambda x: str(x) + ' pts')
 
-    # st.dataframe(df)
-
     fig = px.bar(
         df,
         x=x,
         y=y,
-        color='Performance',  # Color bars based on 'Performance' category
+        color='Performance',
         text=color,
         hover_data={color: False,
                     'Performance': False,
                     'users': False,
-                    'player_count': False, 
+                    'player_count': False,
                     'Choice': False},
 
         color_discrete_map={
@@ -44,8 +41,6 @@ def barchart(df, x, y, color):
         xaxis_fixedrange=True,
         yaxis_fixedrange=True
     )
-
-    # Show the chart
     return fig
 
 
