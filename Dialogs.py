@@ -35,3 +35,9 @@ def update_choice(team_choice, player_id, round_id, current_choice):
         st.rerun()
 
     return updated
+
+
+def update_notification(body):
+    '''
+    '''
+    st.write(body)
