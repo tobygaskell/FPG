@@ -40,7 +40,7 @@ if st.sidebar.button('Rules', use_container_width=True):
 
 st.sidebar.markdown('---')
 
-st.sidebar.caption('Email: {}'.format(st.experimental_user.email))
+st.sidebar.caption('Email: {}'.format('toby96@sky.com'))
 
 st.sidebar.caption('Player ID: {}'.format(player_id))
 
