@@ -12,7 +12,7 @@ if 'page_view' not in st.session_state:
 
 st.write(st.experimental_user)
 
-player = utils.fpg_api_get('init_player', email='toby96@sky.com')
+player = utils.fpg_api_get('init_player', email=st.experimental_user.email)
 
 player_id = player['player_id']
 # player_id = 6
@@ -42,7 +42,7 @@ if st.sidebar.button('Rules', use_container_width=True):
 
 st.sidebar.markdown('---')
 
-st.sidebar.caption('Email: {}'.format('toby96@sky.com'))
+st.sidebar.caption('Email: {}'.format(st.experimental_user.email))
 
 st.sidebar.caption('Player ID: {}'.format(player_id))
 
