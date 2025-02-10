@@ -10,7 +10,7 @@ st.set_page_config(layout="wide")
 if 'page_view' not in st.session_state:
     st.session_state['page_view'] = 'Make Choice'
 
-player = utils.fpg_api_get('init_player', email=st.experimental_user.email)
+player = utils.fpg_api_get('init_player', email='toby96@sky.com')
 
 player_id = player['player_id']
 # player_id = 6
