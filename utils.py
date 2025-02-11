@@ -24,6 +24,10 @@ def fpg_api_post(endpoint, data):
     '''
     url = st.secrets['fpg']['host']
 
+    print(url) 
+
+    print(data)
+    
     response = r.post(url + endpoint, json=data).json()
 
     return response
