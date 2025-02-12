@@ -31,6 +31,9 @@ def fpg_api_post(endpoint, data):
                       json=data,
                       auth=(st.secrets['fpg']['api_user'],
                             st.secrets['fpg']['api_pass'])).json()
+    
+    response = r.post(url + endpoint, json=data).json()
+
 
     return response
 
