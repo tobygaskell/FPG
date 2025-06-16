@@ -1,54 +1,44 @@
+import pandas as pd
+import mysql.connector
 import streamlit as st
-import requests as r
-import os
 
 
-def fpg_api_get(endpoint, **params):
+def connect_sql():
     '''
     '''
-    url = st.secrets['fpg']['host']
+    sql_user = st.secrets['sql_user']
+    sql_pass = st.secrets['sql_pass']
+    sql_host = st.secrets['sql_host']
+    sql_db = st.secrets['sql_db']
 
-    url = url + endpoint + '?'
+    config = {
+        'user': sql_user,
+        'password': sql_pass,
+        'host': sql_host,
+        'database': sql_db
+    }
 
-    for key, value in params.items():
+    conn = mysql.connector.connect(**config)
+    cursor = conn.cursor()
 
-        url = url + '&{}={}'.format(key, value)
-
-    auth = (st.secrets['fpg']['api_user'],
-            st.secrets['fpg']['api_pass'])
-
-    response = r.get(url, auth=auth)
-
-    return response.json()
+    return cursor, conn
 
 
-def fpg_api_post(endpoint, data):
+def run_sql_query(query, commit=False):
     '''
     '''
-    url = st.secrets['fpg']['host']
+    csr, conn = connect_sql()
 
-    response = r.post(url + endpoint,
-                      json=data,
-                      auth=(st.secrets['fpg']['api_user'],
-                            st.secrets['fpg']['api_pass'])).json()
+    with csr as cur:
+        cur.execute(query)
+        if commit:
+            conn.commit()
+        try:
+            data = pd.DataFrame.from_records(
+                iter(cur),
+                columns=[x[0] for x in cur.description]
+                )
+        except BaseException:
+            data = pd.DataFrame()
 
-    return response
-
-
-@st.cache_data(ttl=600)
-def fpg_api_static(endpoint, **params):
-    '''
-    '''
-    url = st.secrets['fpg']['host']
-
-    url = url + endpoint
-
-    for key, value in params.items():
-
-        url = url + '?{}={}'.format(key, value)
-
-    auth = (st.secrets['fpg']['api_user'],
-            st.secrets['fpg']['api_pass'])
-    response = r.get(url, auth=auth)
-
-    return response.json()
+    return data
